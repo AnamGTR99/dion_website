@@ -110,13 +110,17 @@ export const BOOT = {
 export const MENU_SCENE = {
   orbCount: 11,
   ringRadius: 0.9,
-  /** Fraction of the circle the dots occupy — the reference ring is always a
-   *  broken "C" with a clear gap (frames f017/f021 of the study) */
-  arcSpan: 0.76,
+  /** Fraction of the circle the dots occupy — the reference formation is a
+   *  SNAKE spanning ~half the ring (fine-frame study g020–g038): bright head,
+   *  dots dimming and shrinking toward the tail */
+  arcSpan: 0.5,
+  /** Head → tail falloff along the snake */
+  snake: { tailDim: 0.55, tailShrink: 0.35 },
   /** Ring plane tilt (radians) — the reference ring is near face-on */
   ringTilt: 0.16,
-  /** Whole-cluster rotation, rad/s (reference dotted phase drifts lazily) */
-  rotateSpeed: 0.16,
+  /** Whole-cluster rotation, rad/s. NEGATIVE = clockwise on screen — the
+   *  reference head travels bottom → left → top (g026 → g032 → g038). */
+  rotateSpeed: -0.16,
   /** Per-orb brightness/scale pulse */
   pulse: { speed: 1.6, amount: 0.18 },
   orbSize: { core: 0.07, halo: 0.17 },
@@ -129,8 +133,9 @@ export const MENU_SCENE = {
     length: 11.5,
     compress: { rampIn: [6.0, 7.0], rampOut: [9.5, 10.8], amount: 0.8 },
     collapse: { rampIn: [7.8, 8.6], rampOut: [9.2, 10.2] },
-    /** Extra orbital speed (rad/s) the comet head gains at full collapse */
-    comet: { orbitSpeed: 2.6 },
+    /** Extra orbital speed (rad/s) the comet head gains at full collapse —
+     *  negative to keep the clockwise direction of the dotted phase */
+    comet: { orbitSpeed: -2.6 },
   },
 
   /** Motion-smear trail sprites per orb */
@@ -147,8 +152,8 @@ export const MENU_SCENE = {
     menu: { xFrac: -0.1, yFrac: 0.02, z: 0, scale: 0.62 },
     page: { xFrac: -0.27, yFrac: 0.16, z: 0, scale: 0.5 },
   },
-  /** Big soft nebula sprites behind the cluster */
-  mist: { count: 3, opacity: 0.03, scale: 4 },
+  /** Big soft nebula sprites behind the cluster — the faint haze disc */
+  mist: { count: 3, opacity: 0.045, scale: 3.4 },
 
   camera: { fov: 45, z: 5.2, parallax: 0.14 },
   bloom: { intensity: 0.85, threshold: 0.3, radius: 0.7 },

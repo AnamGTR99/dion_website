@@ -40,8 +40,6 @@ function ringPoint(angle: number, radius: number, out: THREE.Vector3) {
   return out
 }
 
-// Centre of the dotted arc — the "C" spans [0, 2π·arcSpan], gap elsewhere
-const ARC_MID = Math.PI * CFG.arcSpan
 const CORE_COLOR = new THREE.Color()
 const HALO_COLOR = new THREE.Color()
 
@@ -68,10 +66,13 @@ function OrbSwarm() {
   const orbs = useMemo<OrbData[]>(() => {
     const rng = createRng(5150)
     return Array.from({ length: CFG.orbCount }, (_, i) => ({
-      // Dots spread over a broken arc — the reference "C" — with irregular
-      // spacing; the remaining (1 - arcSpan) of the circle stays empty
+      // The snake: orb 0 is the head at angle 0, the rest trail behind it
+      // (spin is negative/clockwise, so larger angles sit behind the head)
+      // over ~half the circle, with irregular spacing
       baseAngle:
-        (i / (CFG.orbCount - 1)) * Math.PI * 2 * CFG.arcSpan + (rng() - 0.5) * 0.3,
+        i === 0
+          ? 0
+          : (i / (CFG.orbCount - 1)) * Math.PI * 2 * CFG.arcSpan + (rng() - 0.5) * 0.25,
       radiusJitter: 1 + (rng() - 0.5) * 0.12,
       phase: rng() * Math.PI * 2,
       // Where each orb flies in from on mount, tinted like the boot stars
@@ -102,7 +103,7 @@ function OrbSwarm() {
     // droplet target only, so the blend weight fading returns orbs smoothly
     // to their ring spots — no rewind.
     const cometExtra = cyc.comet.orbitSpeed * Math.max(0, u - cyc.collapse.rampIn[0])
-    ringPoint(spin + ARC_MID + cometExtra, CFG.ringRadius, tmpDrop)
+    ringPoint(spin + cometExtra, CFG.ringRadius, tmpDrop)
 
     frameCount.current++
 
@@ -111,9 +112,9 @@ function OrbSwarm() {
       const halo = haloRefs.current[i]
       if (!core || !halo) return
 
-      // Compress bunches the dots toward the centre of the arc — the solid
-      // crescent smear of reference f023
-      const angle = spin + ARC_MID + (orb.baseAngle - ARC_MID) * (1 - cyc.compress.amount * compress)
+      // Compress bunches the tail up toward the head — the solid crescent
+      // smear of reference f023/g032
+      const angle = spin + orb.baseAngle * (1 - cyc.compress.amount * compress)
       const radius = CFG.ringRadius * orb.radiusJitter * (1 + Math.sin(t * 0.6 + orb.phase) * 0.04)
       ringPoint(angle, radius, tmpRing)
       tmpRing.z += Math.sin(t * 0.8 + orb.phase) * 0.06
@@ -125,13 +126,18 @@ function OrbSwarm() {
       core.position.copy(tmpRing)
       halo.position.copy(tmpRing)
 
-      // Pulse + comet brightness: the head flares, the rest melt into the tail
+      // Snake gradient: bright head, dots dimming + shrinking toward the
+      // tail (every reference frame shows this falloff), then the comet
+      // collapse flares the head while the tail melts into it
+      const along = i / (CFG.orbCount - 1)
+      const snakeFade = 1 - CFG.snake.tailDim * along
+      const snakeSize = 1 - CFG.snake.tailShrink * along
       const pulse = 1 + Math.sin(t * CFG.pulse.speed + orb.phase) * CFG.pulse.amount
       const dim = i === 0 ? 1 + collapse * 1.2 : 1 - collapse * 0.95
-      core.scale.setScalar(CFG.orbSize.core * pulse * dim)
-      halo.scale.setScalar(CFG.orbSize.halo * pulse * dim)
-      ;(core.material as THREE.SpriteMaterial).opacity = Math.min(1, 0.95 * dim) * converge
-      ;(halo.material as THREE.SpriteMaterial).opacity = Math.min(1, 0.5 * pulse * dim) * converge
+      core.scale.setScalar(CFG.orbSize.core * pulse * dim * snakeSize)
+      halo.scale.setScalar(CFG.orbSize.halo * pulse * dim * snakeSize)
+      ;(core.material as THREE.SpriteMaterial).opacity = Math.min(1, 0.95 * dim * snakeFade) * converge
+      ;(halo.material as THREE.SpriteMaterial).opacity = Math.min(1, 0.5 * pulse * dim * snakeFade) * converge
 
       // Scatter dots arrive coloured (like the boot stars) and turn
       // white-blue as the ring forms — reference f015 → f017
@@ -156,7 +162,7 @@ function OrbSwarm() {
         const histIdx = (j + 1) * CFG.trail.frameGap
         sprite.position.copy(orb.history[histIdx])
         const falloff = 1 - (j + 1) / (CFG.trail.perOrb + 1)
-        const op = Math.min(0.85, CFG.trail.baseOpacity + speed * CFG.trail.speedOpacity) * falloff * converge * dim
+        const op = Math.min(0.85, CFG.trail.baseOpacity + speed * CFG.trail.speedOpacity) * falloff * converge * dim * snakeFade
         ;(sprite.material as THREE.SpriteMaterial).opacity = op
         sprite.scale.setScalar(CFG.orbSize.halo * 0.8 * falloff)
       }
@@ -235,8 +241,10 @@ function Mist() {
 
   const blobs = useMemo(() => {
     const rng = createRng(404)
+    // Hug the ring — the reference shows a faint dark-blue haze disc sitting
+    // right behind the formation (visible in fine frames g026–g038)
     return Array.from({ length: CFG.mist.count }, () => ({
-      pos: [(rng() - 0.5) * 2.5, (rng() - 0.5) * 1.5, -1.5 - rng()] as const,
+      pos: [(rng() - 0.5) * 1.2, (rng() - 0.5) * 0.8, -1.5 - rng()] as const,
       rotSpeed: (rng() - 0.5) * 0.05,
       phase: rng() * Math.PI * 2,
     }))
