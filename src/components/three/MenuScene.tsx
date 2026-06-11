@@ -26,7 +26,6 @@ export type MenuSceneVariant = 'menu' | 'page'
 
 interface OrbData {
   baseAngle: number
-  radiusJitter: number
   phase: number
   scatter: THREE.Vector3
   scatterColor: THREE.Color
@@ -68,12 +67,9 @@ function OrbSwarm() {
     return Array.from({ length: CFG.orbCount }, (_, i) => ({
       // The snake: orb 0 is the head at angle 0, the rest trail behind it
       // (spin is negative/clockwise, so larger angles sit behind the head)
-      // over ~half the circle, with irregular spacing
-      baseAngle:
-        i === 0
-          ? 0
-          : (i / (CFG.orbCount - 1)) * Math.PI * 2 * CFG.arcSpan + (rng() - 0.5) * 0.25,
-      radiusJitter: 1 + (rng() - 0.5) * 0.12,
+      // over ~half the circle — evenly spaced on a clean circumference,
+      // like the reference
+      baseAngle: (i / (CFG.orbCount - 1)) * Math.PI * 2 * CFG.arcSpan,
       phase: rng() * Math.PI * 2,
       // Where each orb flies in from on mount, tinted like the boot stars
       scatter: new THREE.Vector3((rng() - 0.5) * 9, (rng() - 0.5) * 7, (rng() - 0.5) * 4),
@@ -113,11 +109,11 @@ function OrbSwarm() {
       if (!core || !halo) return
 
       // Compress bunches the tail up toward the head — the solid crescent
-      // smear of reference f023/g032
+      // smear of reference f023/g032. All dots share one radius and one
+      // breathing phase so the arc stays a clean circle.
       const angle = spin + orb.baseAngle * (1 - cyc.compress.amount * compress)
-      const radius = CFG.ringRadius * orb.radiusJitter * (1 + Math.sin(t * 0.6 + orb.phase) * 0.04)
+      const radius = CFG.ringRadius * (1 + Math.sin(t * 0.6) * 0.03)
       ringPoint(angle, radius, tmpRing)
-      tmpRing.z += Math.sin(t * 0.8 + orb.phase) * 0.06
 
       // ring → comet head → (converge-in on mount overrides both)
       tmpRing.lerp(tmpDrop, i === 0 ? collapse : collapse * 0.92)
