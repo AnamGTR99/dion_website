@@ -99,14 +99,14 @@ export default function PortfolioCategories() {
           transition={{ delay: 0.1 }}
         >
           <h1 className="ps2-gold text-xl md:text-2xl font-bold tracking-wide">My Portfolio</h1>
-          <p className="text-xs md:text-sm mt-0.5" style={{ color: '#8f8657', textShadow: '0 1px 1px rgba(255,255,255,0.25)' }}>
+          <p className="text-xs md:text-sm mt-0.5" style={{ color: 'var(--color-ps2-accent-soft)', textShadow: '0 1px 1px rgba(255,255,255,0.25)' }}>
             {CATEGORIES.length} categories
           </p>
         </motion.div>
 
         <motion.div
           key={selected}
-          className="ps2-gold text-lg md:text-xl font-bold text-right max-w-60 md:max-w-sm leading-tight pt-0.5 pr-0 md:pr-14"
+          className="ps2-gold text-lg md:text-xl font-bold text-right max-w-60 md:max-w-sm leading-tight pt-0.5 pr-28 md:pr-44"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.25 }}

@@ -70,7 +70,7 @@ export default function GalleryView() {
             <h1 className="ps2-gold text-xl md:text-2xl font-bold tracking-wide">
               {category?.label || 'Gallery'}
             </h1>
-            <p className="text-xs md:text-sm mt-0.5" style={{ color: '#8f8657', textShadow: '0 1px 1px rgba(255,255,255,0.25)' }}>
+            <p className="text-xs md:text-sm mt-0.5" style={{ color: 'var(--color-ps2-accent-soft)', textShadow: '0 1px 1px rgba(255,255,255,0.25)' }}>
               {filteredVideos.length} {filteredVideos.length === 1 ? 'project' : 'projects'}
             </p>
           </div>
@@ -116,10 +116,10 @@ export default function GalleryView() {
                 className="w-full h-full object-cover"
                 onError={(e) => { (e.target as HTMLImageElement).src = getYouTubeThumbnail(featured.youtubeUrl, 'hqdefault') }}
               />
-              <div className="absolute inset-0 rounded-lg border-2 border-transparent group-hover:border-[#efb83d]/70 transition-colors" />
+              <div className="absolute inset-0 rounded-lg border-2 border-transparent group-hover:border-[#5577dd]/70 transition-colors" />
               <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <div className="w-16 h-16 rounded-full flex items-center justify-center"
-                  style={{ backgroundImage: 'linear-gradient(#b20000 0%, #000000 50%, #b20000 100%)', boxShadow: 'rgba(0,0,0,0.75) 0px 0px 4px 2px' }}>
+                  style={{ backgroundImage: 'linear-gradient(var(--color-ps2-accent-deep) 0%, #000000 50%, var(--color-ps2-accent-deep) 100%)', boxShadow: 'rgba(0,0,0,0.75) 0px 0px 4px 2px' }}>
                   <svg viewBox="0 0 24 24" className="w-7 h-7 text-white ml-1" fill="currentColor">
                     <polygon points="5,3 19,12 5,21" />
                   </svg>
@@ -150,7 +150,7 @@ export default function GalleryView() {
                   loading="lazy"
                   onError={(e) => { (e.target as HTMLImageElement).src = getYouTubeThumbnail(video.youtubeUrl, 'hqdefault') }}
                 />
-                <div className="absolute inset-0 rounded-lg border border-transparent group-hover:border-[#efb83d]/60 transition-colors" />
+                <div className="absolute inset-0 rounded-lg border border-transparent group-hover:border-[#5577dd]/60 transition-colors" />
                 <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <div className="w-12 h-12 rounded-full flex items-center justify-center"
                     style={{ backgroundImage: 'linear-gradient(#828282 0%, #000 50%, #828282 100%)', boxShadow: 'rgba(0,0,0,0.75) 0px 0px 4px 2px' }}>

@@ -41,7 +41,7 @@ export default function LoadingScreen({ progress, onComplete }: LoadingScreenPro
               <motion.div
                 className="h-full rounded-full"
                 style={{
-                  background: 'linear-gradient(90deg, #cc4400, #ff6600)',
+                  background: 'linear-gradient(90deg, var(--color-ps2-accent-deep), var(--color-ps2-accent-mid))',
                 }}
                 initial={{ width: '0%' }}
                 animate={{ width: `${Math.min(progress, 100)}%` }}

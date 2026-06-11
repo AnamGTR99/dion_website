@@ -12,8 +12,10 @@
 
 export type PaletteName = 'brand' | 'classic'
 
-/** 'brand' = Dion's orange/red rebrand (client request). 'classic' = original PS2 blue. */
-export const ACTIVE_PALETTE: PaletteName = 'brand'
+/** 'classic' = original PS2 blue (client feedback 2026-06: "OG Sony look").
+ *  'brand' = the earlier orange/red rebrand — now exposed as Visual Filter 2
+ *  via a CSS hue-rotate instead of a palette swap (see lib/profile.ts). */
+export const ACTIVE_PALETTE: PaletteName = 'classic'
 
 export const PALETTES = {
   brand: {
@@ -32,10 +34,12 @@ export const PALETTES = {
   },
   classic: {
     background: '#000000',
-    block: { tint: '#a8aeba', variance: 0.3 },
+    /** Cooler, darker grey so the city sits in the deep blue haze of the reference */
+    block: { tint: '#969eae', variance: 0.3 },
     glow: { core: '#88aaff', light: '#3355cc', ambient: '#0a0e1f' },
     debris: '#101218',
-    sparks: ['#aaff66', '#ff5533', '#ffffff'],
+    /** Reference boot ball colours: red, blue, green, purple, pink, amber */
+    sparks: ['#ff5544', '#5588ff', '#77ee77', '#bb77ff', '#ff77bb', '#ffaa44'],
     orb: { core: '#eef6ff', halo: '#8fc2ee', mist: '#143a5a' },
     stars: ['#aaffcc', '#88aaff', '#ccaaff', '#ffffff', '#aabbcc'],
   },
@@ -47,20 +51,23 @@ export const palette = PALETTES[ACTIVE_PALETTE]
 export const SEED = 20260611
 
 // ──────────────────────────────────────────────────────────────
-// BOOT SEQUENCE (0:00–0:07 of the reference)
-// Timeline: black → city fades in → text → cruise → plunge → stars → menu
+// BOOT SEQUENCE — timed 1:1 against the startup reference
+// (youtube.com/watch?v=YWWjTYlSp2M): black → city fades in drifting →
+// SCE text up early and HELD while coloured light balls fly past →
+// text out → plunge → blackout → star drift → menu
 // ──────────────────────────────────────────────────────────────
 export const BOOT = {
   /** Black cover fades off the moving city over [start, end] */
-  cityReveal: { start: 0.4, end: 1.8 },
-  /** "by Dion Camilleri" overlay (the "Sony Computer Entertainment" moment) */
-  text: { fadeInStart: 2.0, fadeInEnd: 2.8, fadeOutStart: 4.6, fadeOutEnd: 5.1 },
+  cityReveal: { start: 0.5, end: 1.6 },
+  /** "by Dion Camilleri" overlay (the "Sony Computer Entertainment" moment).
+   *  Reference: text up ~1.5s in with a quick fade, held ~5s, out before the plunge. */
+  text: { fadeInStart: 1.5, fadeInEnd: 2.1, fadeOutStart: 6.5, fadeOutEnd: 7.1 },
   /** Slow descent phase length — the plunge starts when this ends */
-  cruiseDuration: 5.0,
+  cruiseDuration: 7.2,
   /** Fade to black during the plunge [start, end] (absolute time) */
-  blackout: { start: 5.35, end: 5.9 },
+  blackout: { start: 7.55, end: 8.1 },
   /** Star drift phase [start, end] (absolute). onComplete fires at end. */
-  stars: { start: 6.0, end: 8.3, count: 14 },
+  stars: { start: 8.2, end: 10.5, count: 14 },
 
   camera: {
     /** Narrow FOV from high above = the telephoto compression of the original */
@@ -89,8 +96,9 @@ export const BOOT = {
 
   /** Dark tumbling cubes floating above the city */
   debris: { floating: 6, resting: 4, minSize: 0.7, maxSize: 1.5 },
-  /** Fast little light streaks */
-  sparkCount: 3,
+  /** The coloured light balls flying above the city (the reference comets).
+   *  trail = smear sprites behind each head, trailGap = seconds between them. */
+  orbs: { count: 7, trail: 4, trailGap: 0.05, minSize: 0.3, maxSize: 0.55, minSpeed: 5, maxSpeed: 10 },
 
   bloom: { intensity: 0.9, threshold: 0.5, radius: 0.7 },
 } as const
@@ -100,38 +108,47 @@ export const BOOT = {
 // The cluster cycles: dotted ring → comet sweep → droplet → ring
 // ──────────────────────────────────────────────────────────────
 export const MENU_SCENE = {
-  orbCount: 10,
-  ringRadius: 1.15,
-  /** Ring plane tilt (radians) so it reads as 3D, like the reference */
-  ringTilt: 0.38,
-  /** Whole-cluster rotation, rad/s (reference turns slowly counter-clockwise) */
-  rotateSpeed: 0.22,
+  orbCount: 11,
+  ringRadius: 0.9,
+  /** Fraction of the circle the dots occupy — the reference ring is always a
+   *  broken "C" with a clear gap (frames f017/f021 of the study) */
+  arcSpan: 0.76,
+  /** Ring plane tilt (radians) — the reference ring is near face-on */
+  ringTilt: 0.16,
+  /** Whole-cluster rotation, rad/s (reference dotted phase drifts lazily) */
+  rotateSpeed: 0.16,
   /** Per-orb brightness/scale pulse */
   pulse: { speed: 1.6, amount: 0.18 },
-  orbSize: { core: 0.07, halo: 0.26 },
+  orbSize: { core: 0.07, halo: 0.17 },
 
   /** Formation cycle (seconds). Inside one cycle:
-   *  compress = orbs bunch into the comet "C", collapse = merge into a droplet */
+   *  compress = dots fuse into the solid crescent smear (reference f023),
+   *  collapse = merge into a single comet head that orbits the ring path
+   *  fast with a tail tracing the arc (reference f025–f027) */
   cycle: {
     length: 11.5,
-    compress: { rampIn: [6.0, 7.0], rampOut: [9.5, 10.8], amount: 0.65 },
+    compress: { rampIn: [6.0, 7.0], rampOut: [9.5, 10.8], amount: 0.8 },
     collapse: { rampIn: [7.8, 8.6], rampOut: [9.2, 10.2] },
+    /** Extra orbital speed (rad/s) the comet head gains at full collapse */
+    comet: { orbitSpeed: 2.6 },
   },
 
   /** Motion-smear trail sprites per orb */
-  trail: { perOrb: 4, frameGap: 2, baseOpacity: 0.0, speedOpacity: 2.4 },
+  trail: { perOrb: 6, frameGap: 3, baseOpacity: 0.0, speedOpacity: 3.2 },
 
-  /** Orbs fly in from scattered space when the menu mounts (continues the boot stars) */
+  /** Orbs fly in from scattered space when the menu mounts (continues the
+   *  boot stars — coloured, fading to white-blue as the ring forms) */
   convergeDuration: 1.6,
 
   /** Cluster placement per screen, like the reference: left of the menu text.
-   *  xFrac/yFrac are fractions of the visible viewport width/height. */
+   *  xFrac/yFrac are fractions of the visible viewport width/height.
+   *  Reference cluster is small — ~15% of screen width. */
   cluster: {
-    menu: { xFrac: -0.18, yFrac: 0.04, z: 0, scale: 1.0 },
-    page: { xFrac: -0.27, yFrac: 0.16, z: 0, scale: 0.8 },
+    menu: { xFrac: -0.1, yFrac: 0.02, z: 0, scale: 0.62 },
+    page: { xFrac: -0.27, yFrac: 0.16, z: 0, scale: 0.5 },
   },
   /** Big soft nebula sprites behind the cluster */
-  mist: { count: 3, opacity: 0.022, scale: 4 },
+  mist: { count: 3, opacity: 0.03, scale: 4 },
 
   camera: { fov: 45, z: 5.2, parallax: 0.14 },
   bloom: { intensity: 0.85, threshold: 0.3, radius: 0.7 },

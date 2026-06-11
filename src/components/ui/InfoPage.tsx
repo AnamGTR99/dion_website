@@ -113,9 +113,9 @@ export default function InfoPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className="text-left text-base md:text-lg tracking-wide cursor-pointer transition-all"
                 style={{
-                  color: isActive ? '#ffc08a' : '#787878',
+                  color: isActive ? 'var(--color-ps2-accent)' : '#787878',
                   textShadow: isActive
-                    ? '0 2px 5px rgba(0,0,0,0.9), 0 0 18px rgba(255,150,70,0.45)'
+                    ? '0 2px 5px rgba(0,0,0,0.9), 0 0 18px rgba(var(--color-ps2-accent-glow),0.45)'
                     : '0 2px 5px rgba(0,0,0,0.9)',
                 }}
               >
@@ -165,7 +165,7 @@ export default function InfoPage() {
                       <a
                         href={`mailto:${DEMO_INFO.contactEmail}`}
                         className="hover:underline"
-                        style={{ color: '#ffc08a' }}
+                        style={{ color: 'var(--color-ps2-accent)' }}
                       >
                         {DEMO_INFO.contactEmail}
                       </a>
@@ -181,7 +181,7 @@ export default function InfoPage() {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="hover:underline"
-                          style={{ color: '#ffc08a' }}
+                          style={{ color: 'var(--color-ps2-accent)' }}
                         >
                           {link.url.replace('https://www.', '')}
                         </a>

@@ -18,10 +18,11 @@ const MenuScene = dynamic(() => import('@/components/three/MenuScene'), {
   loading: () => null,
 })
 
+// Client feedback 2026-06: selection screen keeps only Portfolio + Showreel
+// (Info & Contact removed; InfoPage stays reachable from the profile panel)
 const MENU_ITEMS = [
   { id: 'portfolio', label: 'My Portfolio', screen: 'PORTFOLIO' as const },
   { id: 'showreel', label: 'Showreel', screen: 'SHOWREEL' as const },
-  { id: 'info', label: 'Info & Contact', screen: 'INFO' as const },
 ]
 
 export default function SwipeMenu() {
@@ -92,9 +93,9 @@ export default function SwipeMenu() {
                   className="pointer-events-auto cursor-pointer text-2xl md:text-3xl lg:text-[34px] leading-snug tracking-wide outline-none text-center md:text-left"
                   style={{
                     fontFamily: 'Play, Helvetica Neue, Arial, sans-serif',
-                    color: isActive ? '#ffc08a' : '#787878',
+                    color: isActive ? 'var(--color-ps2-accent)' : '#787878',
                     textShadow: isActive
-                      ? '0 2px 6px rgba(0,0,0,0.9), 0 0 22px rgba(255,150,70,0.5), 0 0 50px rgba(255,120,40,0.25)'
+                      ? '0 2px 6px rgba(0,0,0,0.9), 0 0 22px rgba(var(--color-ps2-accent-glow),0.5), 0 0 50px rgba(var(--color-ps2-accent-glow),0.25)'
                       : '0 2px 5px rgba(0,0,0,0.9)',
                   }}
                   initial={{ opacity: 0, x: 24 }}

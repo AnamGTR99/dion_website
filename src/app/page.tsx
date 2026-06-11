@@ -4,8 +4,10 @@ import { useState, useCallback, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { AnimatePresence } from 'framer-motion'
 import { useNavigationStore } from '@/lib/store'
+import { useProfileStore, VISUAL_FILTERS } from '@/lib/profile'
 import LoadingScreen from '@/components/ui/LoadingScreen'
 import PS2Chrome from '@/components/ui/PS2Chrome'
+import ProfileModal from '@/components/ui/ProfileModal'
 import SkipButton from '@/components/ui/SkipButton'
 import SwipeMenu from '@/components/ui/SwipeMenu'
 import PortfolioCategories from '@/components/ui/PortfolioCategories'
@@ -21,6 +23,8 @@ const BootScene = dynamic(() => import('@/components/three/BootScene'), {
 export default function Home() {
   const { currentScreen, setScreen, bootPlayed, markBootPlayed } = useNavigationStore()
   const [loadProgress, setLoadProgress] = useState(0)
+  const activeFilter = useProfileStore((s) => s.filter)
+  const filterCss = VISUAL_FILTERS.find((f) => f.id === activeFilter)?.css ?? 'none'
 
   // Simulate loading progress (in production, useProgress from drei feeds this)
   useEffect(() => {
@@ -96,8 +100,13 @@ export default function Home() {
   }, [currentScreen, setScreen, setActiveSubcategory])
 
   return (
-    <main className="relative w-full h-screen overflow-hidden bg-ps2-black">
+    // The Visual Filter hue-rotates everything — DOM and 3D canvases alike
+    <main
+      className="relative w-full h-screen overflow-hidden bg-ps2-black"
+      style={{ filter: filterCss, transition: 'filter 0.4s ease' }}
+    >
       <PS2Chrome />
+      <ProfileModal />
 
       <AnimatePresence mode="wait">
         {/* Loading screen */}

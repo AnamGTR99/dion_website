@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useNavigationStore, type Screen } from '@/lib/store'
+import ProfileWidget from './ProfileWidget'
 
 function ClockDisplay({ dark }: { dark: boolean }) {
   const [time, setTime] = useState('')
@@ -91,6 +92,9 @@ function getPrompts(screen: Screen): { enter: boolean; back: boolean } {
 /** Screens drawn on the light Memory Card browser panel need dark chrome text */
 const LIGHT_SCREENS: Screen[] = ['PORTFOLIO', 'GALLERY']
 
+/** Screens that show the visitor profile instead of the brand mark (client feedback) */
+const PROFILE_SCREENS: Screen[] = ['MENU', 'PORTFOLIO', 'GALLERY']
+
 // The prompts behave like the real buttons: they synthesize the same key
 // events the keyboard handlers listen for.
 function pressKey(key: 'Enter' | 'Escape') {
@@ -106,23 +110,30 @@ export default function PS2Chrome() {
 
   const prompts = getPrompts(currentScreen)
   const dark = LIGHT_SCREENS.includes(currentScreen)
+  const showProfile = PROFILE_SCREENS.includes(currentScreen)
 
   return (
     <>
-      {/* Brand mark + clock — top right */}
+      {/* Top right: visitor profile on portfolio screens, brand mark + clock elsewhere */}
       <div className="fixed top-5 right-6 z-50 flex flex-col items-end gap-0.5">
-        <div
-          className="text-2xl font-bold leading-none"
-          style={{
-            color: '#cc4400',
-            textShadow: dark
-              ? '0 1px 1px rgba(255,255,255,0.4), 0 0 10px rgba(204,68,0,0.3)'
-              : '0 0 10px rgba(204,68,0,0.4), 0 0 20px rgba(204,68,0,0.2)',
-          }}
-        >
-          D
-        </div>
-        <ClockDisplay dark={dark} />
+        {showProfile ? (
+          <ProfileWidget dark={dark} />
+        ) : (
+          <>
+            <div
+              className="text-2xl font-bold leading-none"
+              style={{
+                color: 'var(--color-ps2-accent-mid)',
+                textShadow: dark
+                  ? '0 1px 1px rgba(255,255,255,0.4), 0 0 10px rgba(var(--color-ps2-accent-glow),0.3)'
+                  : '0 0 10px rgba(var(--color-ps2-accent-glow),0.4), 0 0 20px rgba(var(--color-ps2-accent-glow),0.2)',
+              }}
+            >
+              D
+            </div>
+            <ClockDisplay dark={dark} />
+          </>
+        )}
       </div>
 
       {/* PS2 button prompts — bottom centre, clickable */}

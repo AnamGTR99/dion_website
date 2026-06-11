@@ -14,11 +14,14 @@
   --color-ps2-grey-content: #989898;
   --color-ps2-grey-highlight: #c8c8c8;
 
-  /* Dion's brand accent — replaces PS2 blue with warm red/orange */
-  --color-ps2-red: #b20000;
-  --color-ps2-red-bright: #cc4400;
-  --color-ps2-orange: #ff6600;
-  --color-ps2-amber: #ffaa33;
+  /* OG Sony accent (client feedback 2026-06) — the orange rebrand now lives
+     in Visual Filter 2 as a hue-rotate, so everything authors in PS2 blue */
+  --color-ps2-accent: #aac4ff;        /* highlighted text */
+  --color-ps2-accent-mid: #5577dd;    /* icons, badges */
+  --color-ps2-accent-deep: #2244aa;   /* metallic gradients */
+  --color-ps2-accent-header: #3a5cb0; /* headers on the light browser panel */
+  --color-ps2-accent-soft: #5e6f9e;   /* muted captions on the light panel */
+  --color-ps2-accent-glow: 110, 150, 255; /* rgb triplet for glows */
 
   /* PlayStation button colors */
   --color-ps-triangle: #1faa8c;
@@ -34,6 +37,15 @@
 
   /* Font */
   --font-ps2: "Play", "Helvetica Neue", Arial, sans-serif;
+}
+
+/* The PS2 boot-screen face — used for the intro text per client feedback */
+@font-face {
+  font-family: "PS2";
+  src: url("/fonts/ps2.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
 }
 
 @font-face {
@@ -108,10 +120,13 @@ body::before {
 
 /* === PS2 METALLIC UI CLASSES === */
 
-/* Gold header text — the Memory Card browser headers */
+/* Header text on the Memory Card browser panel. Authored in the accent
+   family (not PS2 gold) so the Visual Filters re-hue it IN SYNC with the
+   rest of the UI — gold rotated the opposite way and clashed (client bug
+   report: filter 2 orange but headers light blue). */
 .ps2-gold {
-  color: #efb83d;
-  text-shadow: 1px 2px 2px rgba(0, 0, 0, 0.55), 0 0 12px rgba(239, 184, 61, 0.25);
+  color: var(--color-ps2-accent-header);
+  text-shadow: 1px 2px 2px rgba(0, 0, 0, 0.45), 0 0 12px rgba(var(--color-ps2-accent-glow), 0.25);
 }
 
 /* The Memory Card browser panel — light metallic grey, lit from upper-left */
@@ -133,11 +148,11 @@ body::before {
   overflow: hidden;
 }
 
-/* Red accent variant for Dion */
-.ps2-card-red {
-  background-image: linear-gradient(0deg, #000000 10%, #4a1a0a 40%, #1a0a05 80%);
+/* Accent variant — gamertag banner, profile chrome */
+.ps2-card-accent {
+  background-image: linear-gradient(0deg, #000000 10%, #1a2c5a 40%, #0a1228 80%);
   border-radius: 16px;
-  box-shadow: rgba(178,0,0,0.15) 0px 0px 8px 2px;
+  box-shadow: rgba(var(--color-ps2-accent-glow), 0.15) 0px 0px 8px 2px;
   overflow: hidden;
 }
 
@@ -160,9 +175,9 @@ body::before {
   background-image: linear-gradient(#969696 0%, #1a1a1a 50%, #969696 100%);
 }
 
-/* Red accent button */
-.ps2-button-red {
-  background-image: linear-gradient(#b20000 0%, #000000 50%, #b20000 100%);
+/* Accent button — the "Customise profile" style */
+.ps2-button-accent {
+  background-image: linear-gradient(var(--color-ps2-accent-deep) 0%, #000000 50%, var(--color-ps2-accent-deep) 100%);
   color: #ffffff;
   border: none;
   border-radius: 8px;

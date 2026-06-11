@@ -1,13 +1,15 @@
 'use client'
 
 /**
- * BootScene — 1:1 recreation of the PS2 no-disc boot (reference 0:00–0:07):
+ * BootScene — 1:1 recreation of the PS2 startup
+ * (reference: youtube.com/watch?v=YWWjTYlSp2M):
  *
  *   black → top-down block city fades in, slowly sinking + rotating,
  *   dark debris cubes tumbling above, glowing crater at the centre,
- *   "by Dion Camilleri" overlaid (the "Sony Computer Entertainment" moment)
- *   → violent plunge straight down through the city → black → drifting
- *   star particles → menu.
+ *   coloured light balls (red/blue/green/purple…) zipping past with comet
+ *   trails, "by Dion Camilleri" overlaid in the PS2 face (the "Sony
+ *   Computer Entertainment" moment) → violent plunge straight down
+ *   through the city → black → drifting star particles → menu.
  *
  * Every tunable lives in ps2.config.ts (BOOT / PALETTES).
  */
@@ -242,51 +244,71 @@ function CraterGlow() {
   )
 }
 
-// ── Tiny fast light streaks shooting above the city ──────────
-function Sparks() {
-  const glowTex = useMemo(() => makeGlowTexture(64, 0.1), [])
-  const refs = useRef<(THREE.Sprite | null)[]>([])
+// ── The coloured light balls flying above the city ───────────
+// Round glowing heads (red, blue, green, purple…) with a short comet
+// smear behind each, zipping past on gently bobbing paths — the most
+// recognisable element of the reference boot.
+function FlyingOrbs() {
+  const glowTex = useMemo(() => makeGlowTexture(64, 0.3), [])
+  const refs = useRef<(THREE.Group | null)[]>([])
 
-  const sparks = useMemo(() => {
+  const orbs = useMemo(() => {
     const rng = createRng(99)
-    return Array.from({ length: BOOT.sparkCount }, (_, i) => ({
+    const o = BOOT.orbs
+    return Array.from({ length: o.count }, (_, i) => ({
       color: palette.sparks[i % palette.sparks.length],
-      origin: new THREE.Vector3((rng() - 0.5) * 12, 7 + rng() * 2.5, (rng() - 0.5) * 10),
-      dir: new THREE.Vector3(rng() - 0.5, (rng() - 0.5) * 0.2, rng() - 0.5).normalize(),
-      speed: 7 + rng() * 7,
-      delay: rng() * 3,
-      life: 1.2 + rng() * 0.8,
+      origin: new THREE.Vector3((rng() - 0.5) * 16, 6.5 + rng() * 3.5, (rng() - 0.5) * 12),
+      dir: new THREE.Vector3(rng() - 0.5, (rng() - 0.5) * 0.25, rng() - 0.5).normalize(),
+      speed: o.minSpeed + rng() * (o.maxSpeed - o.minSpeed),
+      size: o.minSize + rng() * (o.maxSize - o.minSize),
+      delay: rng() * 4,
+      life: 1.6 + rng() * 1.2,
+      gap: 1.5 + rng() * 2.0,
+      bobPhase: rng() * 6,
     }))
   }, [])
 
   useFrame(({ clock }) => {
-    sparks.forEach((s, i) => {
-      const sprite = refs.current[i]
-      if (!sprite) return
-      const t = (clock.elapsedTime + s.delay) % (s.life + 2.5)
-      if (t > s.life) {
-        ;(sprite.material as THREE.SpriteMaterial).opacity = 0
+    orbs.forEach((o, i) => {
+      const group = refs.current[i]
+      if (!group) return
+      const sprites = group.children as THREE.Sprite[]
+      const t = (clock.elapsedTime + o.delay) % (o.life + o.gap)
+      if (t > o.life) {
+        sprites.forEach((s) => ((s.material as THREE.SpriteMaterial).opacity = 0))
         return
       }
-      sprite.position.copy(s.origin).addScaledVector(s.dir, t * s.speed)
-      const fade = Math.sin((t / s.life) * Math.PI)
-      ;(sprite.material as THREE.SpriteMaterial).opacity = fade * 0.9
+      const fade = Math.min(1, Math.min(t, o.life - t) * 3)
+      sprites.forEach((s, k) => {
+        // k = 0 is the head; the rest trail it along the same path
+        const tk = Math.max(0, t - k * BOOT.orbs.trailGap)
+        s.position.copy(o.origin).addScaledVector(o.dir, tk * o.speed)
+        s.position.y += Math.sin((tk + o.bobPhase) * 2.1) * 0.35
+        const head = k === 0
+        ;(s.material as THREE.SpriteMaterial).opacity =
+          fade * (head ? 0.95 : 0.45 * (1 - k / sprites.length))
+        s.scale.setScalar(o.size * (head ? 1 : 1 - 0.16 * k))
+      })
     })
   })
 
   return (
     <>
-      {sparks.map((s, i) => (
-        <sprite key={i} ref={(el) => { refs.current[i] = el }} scale={[0.5, 0.08, 1]}>
-          <spriteMaterial
-            map={glowTex}
-            color={s.color}
-            blending={THREE.AdditiveBlending}
-            depthWrite={false}
-            transparent
-            opacity={0}
-          />
-        </sprite>
+      {orbs.map((o, i) => (
+        <group key={i} ref={(el) => { refs.current[i] = el }}>
+          {Array.from({ length: BOOT.orbs.trail + 1 }, (_, k) => (
+            <sprite key={k}>
+              <spriteMaterial
+                map={glowTex}
+                color={o.color}
+                blending={THREE.AdditiveBlending}
+                depthWrite={false}
+                transparent
+                opacity={0}
+              />
+            </sprite>
+          ))}
+        </group>
       ))}
     </>
   )
@@ -375,7 +397,7 @@ function CityScene({
       <BlockCity />
       <FloatingDebris />
       <CraterGlow />
-      <Sparks />
+      <FlyingOrbs />
       <CameraRig onPlungeDone={onPlungeDone} />
       <OverlayDriver coverRef={coverRef} textRef={textRef} />
 
@@ -498,9 +520,9 @@ export default function BootScene({ onAnimationComplete }: BootSceneProps) {
             <p
               className="text-white text-lg md:text-2xl -translate-x-4"
               style={{
-                fontFamily: 'Play, Helvetica Neue, Arial, sans-serif',
+                fontFamily: 'PS2, Play, Helvetica Neue, Arial, sans-serif',
                 fontWeight: 400,
-                letterSpacing: '0.02em',
+                letterSpacing: '0.04em',
                 textShadow: '0 1px 3px rgba(0,0,0,0.9), 0 0 14px rgba(255,255,255,0.25)',
               }}
             >
