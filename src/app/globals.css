@@ -1,0 +1,211 @@
+@import "tailwindcss";
+
+@theme inline {
+  /* PS2 Authentic Palette — adapted with Dion's orange/red */
+  --color-ps2-black: #0a0a0a;
+  --color-ps2-dark: #121212;
+  --color-ps2-panel: #1a1a1a;
+
+  /* Metallic greys (the PS2 spectrum) */
+  --color-ps2-grey-dark: #2a2a2a;
+  --color-ps2-grey-mid: #3c3c3c;
+  --color-ps2-grey: #808080;
+  --color-ps2-grey-light: #828282;
+  --color-ps2-grey-content: #989898;
+  --color-ps2-grey-highlight: #c8c8c8;
+
+  /* Dion's brand accent — replaces PS2 blue with warm red/orange */
+  --color-ps2-red: #b20000;
+  --color-ps2-red-bright: #cc4400;
+  --color-ps2-orange: #ff6600;
+  --color-ps2-amber: #ffaa33;
+
+  /* PlayStation button colors */
+  --color-ps-triangle: #1faa8c;
+  --color-ps-circle: #e83287;
+  --color-ps-cross: #0070d1;
+  --color-ps-square: #a363d9;
+
+  /* Text */
+  --color-ps2-text: #ffffff;
+  --color-ps2-text-dim: #d0d0d0;
+  --color-ps2-text-muted: #888888;
+  --color-ps2-text-dark: #000000;
+
+  /* Font */
+  --font-ps2: "Play", "Helvetica Neue", Arial, sans-serif;
+}
+
+@font-face {
+  font-family: "Play";
+  src: url("/fonts/play-regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Play";
+  src: url("/fonts/play-bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* NOTE: no universal margin/padding reset here — Tailwind's preflight handles
+   it. An un-layered `* { padding: 0 }` overrides every layered Tailwind
+   spacing utility and silently breaks all layout padding. */
+
+html, body {
+  background: #000000;
+  color: var(--color-ps2-text);
+  font-family: var(--font-ps2);
+  overflow-x: hidden;
+  height: 100%;
+}
+
+/* CRT Scanline overlay */
+body::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.04) 2px,
+    rgba(0, 0, 0, 0.04) 4px
+  );
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* Noise/grain overlay for CRT authenticity */
+body::before {
+  content: "";
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity: 0.5;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  z-index: 9999;
+  animation: grain 0.5s steps(4) infinite;
+}
+
+@keyframes grain {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-2%, -2%); }
+  50% { transform: translate(2%, 2%); }
+  75% { transform: translate(-1%, 1%); }
+}
+
+/* === PS2 METALLIC UI CLASSES === */
+
+/* Gold header text — the Memory Card browser headers */
+.ps2-gold {
+  color: #efb83d;
+  text-shadow: 1px 2px 2px rgba(0, 0, 0, 0.55), 0 0 12px rgba(239, 184, 61, 0.25);
+}
+
+/* The Memory Card browser panel — light metallic grey, lit from upper-left */
+.ps2-browser-panel {
+  background:
+    radial-gradient(ellipse 120% 90% at 32% 18%, #c2c2be 0%, #a8a8a4 38%, #82827e 68%, #5c5c58 92%, #4a4a46 100%);
+}
+
+/* White light pooled behind a selected save icon */
+.ps2-icon-glow {
+  background: radial-gradient(circle at 50% 55%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.5) 32%, rgba(255, 255, 255, 0) 68%);
+}
+
+/* The signature PS2 metallic gradient card */
+.ps2-card {
+  background-image: linear-gradient(0deg, #000000 10%, #828282 60%);
+  border-radius: 16px;
+  box-shadow: rgba(0,0,0,0.25) 0px 0px 4px 2px;
+  overflow: hidden;
+}
+
+/* Red accent variant for Dion */
+.ps2-card-red {
+  background-image: linear-gradient(0deg, #000000 10%, #4a1a0a 40%, #1a0a05 80%);
+  border-radius: 16px;
+  box-shadow: rgba(178,0,0,0.15) 0px 0px 8px 2px;
+  overflow: hidden;
+}
+
+/* Metallic button — the PS2 triple gradient + inset shadows */
+.ps2-button {
+  background-image: linear-gradient(#828282 0%, #000000 50%, #828282 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  box-shadow:
+    rgba(0,0,0,0.75) 0px 0px 4px 2px,
+    rgb(255,255,255) 0px 4px 8px -4px inset,
+    rgb(255,255,255) 0px -4px 8px -4px inset;
+  font-family: var(--font-ps2);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ps2-button:hover {
+  background-image: linear-gradient(#969696 0%, #1a1a1a 50%, #969696 100%);
+}
+
+/* Red accent button */
+.ps2-button-red {
+  background-image: linear-gradient(#b20000 0%, #000000 50%, #b20000 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  box-shadow:
+    rgba(0,0,0,0.75) 0px 0px 4px 2px,
+    rgb(255,255,255) 0px 4px 8px -4px inset,
+    rgb(255,255,255) 0px -4px 8px -4px inset;
+  font-family: var(--font-ps2);
+  cursor: pointer;
+}
+
+/* Content area — lighter metallic */
+.ps2-content {
+  background-image: linear-gradient(#c8c8c8 0%, #989898 100%);
+  border-radius: 12px;
+  box-shadow: rgba(0,0,0,0.25) 0px 0px 4px 2px;
+  color: #000000;
+}
+
+/* Dark vignette header panel */
+.ps2-header-panel {
+  background-image: radial-gradient(at 50% 0%, rgba(0,0,0,0) 0%, #2a2a2a 90%, #2a2a2a 100%);
+  border-radius: 12px;
+  box-shadow: rgba(0,0,0,0.25) 0px 0px 4px 2px;
+}
+
+/* Active item glow animation */
+@keyframes ps2-glow {
+  from {
+    text-shadow: 0 0 1px #d3d3d3, 0 0 2px #acacac, 0 0 2px #b1afaf, 0 0 5px #9b9b9b;
+  }
+  to {
+    text-shadow: 0 0 5px #dfdfdf, 0 0 8px #c9c9c9, 0 0 15px #b6b6b4, 0 0 20px #b9b9b9;
+  }
+}
+
+.ps2-glow-text {
+  animation: ps2-glow 1s ease-in-out infinite alternate;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #0a0a0a; }
+::-webkit-scrollbar-thumb { background: #3c3c3c; border-radius: 2px; }
+
+body.modal-open { overflow: hidden; }
