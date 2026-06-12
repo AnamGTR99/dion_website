@@ -125,7 +125,7 @@ function TopGlints({ spots }: { spots: { x: number; y: number; z: number }[] }) 
   const glints = useMemo(() => {
     const rng = createRng(31337)
     const shuffled = [...spots].sort(() => rng() - 0.5)
-    return shuffled.slice(0, 6).map((s) => ({
+    return shuffled.slice(0, 11).map((s) => ({
       pos: [s.x + (rng() - 0.5) * 0.4, s.y + 0.06, s.z + (rng() - 0.5) * 0.4] as const,
       period: 2.2 + rng() * 2.6,
       offset: rng() * 6,
@@ -259,7 +259,7 @@ function CraterGlow() {
       // makes the gas look like it swirls
       rotSpeed: (0.12 + rng() * 0.1) * (i % 2 === 0 ? 1 : -1),
       offset: [(rng() - 0.5) * 1.2, 0.7 + i * 0.35, (rng() - 0.5) * 1.2] as const,
-      opacity: 0.16 + rng() * 0.1,
+      opacity: 0.22 + rng() * 0.12,
       phase: rng() * Math.PI * 2,
     }))
   }, [])
@@ -383,8 +383,15 @@ function FlyingOrbs() {
 // The shared boot timeline starts at the FIRST RENDERED FRAME, not at clock
 // creation — shader compilation can delay the first frame by seconds, and
 // clock.elapsedTime would then skip most of the sequence.
+// QA hook: ?bootT=<seconds> freezes the timeline at that moment so specific
+// beats can be screenshotted deterministically.
+const FROZEN_T =
+  typeof window !== 'undefined'
+    ? Number(new URLSearchParams(window.location.search).get('bootT')) || null
+    : null
 const bootStart = { t: null as number | null }
 function bootTime(elapsed: number) {
+  if (FROZEN_T !== null) return FROZEN_T
   if (bootStart.t === null || elapsed < bootStart.t) bootStart.t = elapsed
   return elapsed - bootStart.t
 }

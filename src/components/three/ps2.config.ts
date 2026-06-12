@@ -36,8 +36,9 @@ export const PALETTES = {
   },
   classic: {
     background: '#000000',
-    /** Cool grey, tops near-white like the reference frames */
-    block: { tint: '#aab2c4', variance: 0.3 },
+    /** Cool grey, tops near-white. High variance = the patchy mix of bright
+     *  and mid-grey tops in the reference */
+    block: { tint: '#bcc4d2', variance: 0.45 },
     glow: { core: '#88aaff', light: '#3355cc', ambient: '#0a0e1f' },
     /** Layered crater gas wisps — reference smoke is blue with purple fringes */
     smoke: ['#6688dd', '#7755cc'],
@@ -61,32 +62,29 @@ export const SEED = 20260611
 // text out → plunge → blackout → star drift → menu
 // ──────────────────────────────────────────────────────────────
 export const BOOT = {
-  /** Black cover snaps off the moving city — the reference reveal is FAST
-   *  (b009 black at 1.4s → b010 fully visible at 1.5s) */
-  cityReveal: { start: 1.25, end: 1.65 },
-  /** "by Dion Camilleri" overlay (the "Sony Computer Entertainment" moment).
-   *  Frame-exact from the 0:00-anchored clip: in ~2.2–2.6s, out ~4.3–4.65s. */
-  text: { fadeInStart: 2.2, fadeInEnd: 2.6, fadeOutStart: 4.3, fadeOutEnd: 4.65 },
+  /** Black cover eases off the moving city (client: console-exact felt
+   *  rushed — pacing relaxed ~1.4× while keeping the reference beats) */
+  cityReveal: { start: 0.9, end: 1.9 },
+  /** "by Dion Camilleri" overlay (the "Sony Computer Entertainment" moment) */
+  text: { fadeInStart: 2.8, fadeInEnd: 3.4, fadeOutStart: 6.2, fadeOutEnd: 6.7 },
   /** Slow descent phase length — the plunge starts when this ends */
-  cruiseDuration: 4.6,
+  cruiseDuration: 6.8,
   /** Fade to black during the plunge [start, end] (absolute time) — late
    *  enough that the pillars visibly rush past the camera first (b030) */
-  blackout: { start: 5.15, end: 5.65 },
+  blackout: { start: 7.35, end: 7.95 },
   /** Star drift phase [start, end] (absolute). onComplete fires at end. */
-  stars: { start: 5.75, end: 8.0, count: 14 },
+  stars: { start: 8.05, end: 10.3, count: 14 },
 
   camera: {
     /** Narrow FOV from high above = the telephoto compression of the original */
     fov: 28,
-    /** Height above the city at t=0 — high enough that the whole slab
-     *  floats in black space with margins, like the reference */
-    startY: 58,
-    /** Oblique birds-eye: tilt off straight-down (radians) — the reference
-     *  clearly shows pillar SIDE faces, not a pure top-down view */
-    pitch: 0.34,
-    /** Cruise: visible sink + slow roll + tiny lateral drift. The reference
-     *  camera gets ~20% closer between 1.5s and 4.2s. */
-    cruise: { descentPerSec: 2.2, rollDegPerSec: 2.5, driftX: 0.12 },
+    /** Height above the city at t=0 — whole slab in frame with a black border */
+    startY: 54,
+    /** Near top-down with a slight tilt — enough for a hint of the pillar
+     *  side faces without losing the birds-eye read */
+    pitch: 0.18,
+    /** Cruise: gentle sink + slow roll + tiny lateral drift */
+    cruise: { descentPerSec: 1.5, rollDegPerSec: 2.5, driftX: 0.12 },
     /** Plunge: quadratic acceleration down INTO the pillars with extra roll */
     plunge: { descent: 55, rollDeg: 50 },
   },
@@ -110,12 +108,13 @@ export const BOOT = {
   debris: { floating: 6, resting: 4, minSize: 0.9, maxSize: 2.2 },
   /** Layered swirling gas over the crater: counter-rotating translucent
    *  wisps in blue + purple that slowly grow through the boot */
-  smoke: { layers: 5, baseScale: 1.7, growthPerSec: 0.1, riseSpeed: 0.06 },
+  smoke: { layers: 7, baseScale: 2.1, growthPerSec: 0.12, riseSpeed: 0.07 },
   /** The coloured light balls flying above the city (the reference comets).
    *  trail = smear sprites behind each head, trailGap = seconds between them. */
   orbs: { count: 7, trail: 4, trailGap: 0.05, minSize: 0.3, maxSize: 0.55, minSpeed: 5, maxSpeed: 10 },
 
-  bloom: { intensity: 0.9, threshold: 0.5, radius: 0.7 },
+  /** Bloom tuned so the brightest tops shimmer — the polished sheen */
+  bloom: { intensity: 1.05, threshold: 0.42, radius: 0.7 },
 } as const
 
 // ──────────────────────────────────────────────────────────────
