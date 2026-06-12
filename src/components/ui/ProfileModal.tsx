@@ -10,7 +10,6 @@
 
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useNavigationStore } from '@/lib/store'
 import { useProfileStore, AVATARS, VISUAL_FILTERS } from '@/lib/profile'
 import ProfileAvatar from './ProfileAvatar'
 import { DSCORE } from './ProfileWidget'
@@ -81,7 +80,6 @@ function GamertagCard({
 }
 
 export default function ProfileModal() {
-  const { setScreen } = useNavigationStore()
   const {
     modalOpen, closeModal, name, setName, avatarId, setAvatar, filter, setFilter,
   } = useProfileStore()
@@ -251,12 +249,6 @@ export default function ProfileModal() {
                       </p>
                     </div>
 
-                    <button
-                      onClick={() => { closeModal(); setScreen('INFO') }}
-                      className="ps2-button w-full py-2 text-sm cursor-pointer"
-                    >
-                      Info &amp; Contact
-                    </button>
                   </div>
                 </div>
               ) : (
