@@ -90,15 +90,16 @@ function BlockCity() {
 
   // Box with its origin at the base so per-instance Y-scale = height.
   // Shading is baked into vertex colours (unlit, like the original intro):
-  // bright top face, near-black sides — the camera only ever looks down.
+  // bright top face, sides lit from one corner — the reference camera is
+  // oblique, so the side faces are clearly visible (study frames b010–b026).
   const geometry = useMemo(() => {
     const geo = new THREE.BoxGeometry(1, 1, 1)
     geo.translate(0, 0.5, 0)
     const colorAttr = new Float32Array(24 * 3)
     // BoxGeometry face order: +X, -X, +Y, -Y, +Z, -Z (4 verts each)
+    const FACE_LEVELS = [0.45, 0.1, 1.0, 0.0, 0.38, 0.12]
     for (let v = 0; v < 24; v++) {
-      const face = Math.floor(v / 4)
-      const level = face === 2 ? 1.0 : face === 3 ? 0.0 : 0.05
+      const level = FACE_LEVELS[Math.floor(v / 4)]
       colorAttr[v * 3] = colorAttr[v * 3 + 1] = colorAttr[v * 3 + 2] = level
     }
     geo.setAttribute('color', new THREE.BufferAttribute(colorAttr, 3))
@@ -162,18 +163,36 @@ function TopGlints({ spots }: { spots: { x: number; y: number; z: number }[] }) 
   )
 }
 
-// ── Dark cubes resting on top of random towers ───────────────
+// Irregular angular shard — the reference debris are crumpled lumps, not
+// neat cubes. A low-poly icosahedron with jittered vertices reads right
+// in silhouette against the bright pillar tops.
+function makeShardGeometry(seed: number) {
+  const geo = new THREE.IcosahedronGeometry(0.5, 0)
+  const rng = createRng(seed)
+  const pos = geo.getAttribute('position')
+  for (let i = 0; i < pos.count; i++) {
+    pos.setXYZ(
+      i,
+      pos.getX(i) * (0.7 + rng() * 0.7),
+      pos.getY(i) * (0.7 + rng() * 0.7),
+      pos.getZ(i) * (0.7 + rng() * 0.7)
+    )
+  }
+  return geo
+}
+
+// ── Dark shards resting on top of random towers ──────────────
 function RestingDebris({ spots }: { spots: { x: number; y: number; z: number }[] }) {
   const picks = useMemo(() => {
     const rng = createRng(42)
     return [...spots].sort(() => rng() - 0.5).slice(0, BOOT.debris.resting)
   }, [spots])
+  const geos = useMemo(() => picks.map((_, i) => makeShardGeometry(7000 + i)), [picks])
 
   return (
     <>
       {picks.map((s, i) => (
-        <mesh key={i} position={[s.x, s.y + 0.45, s.z]} rotation={[0, i * 0.7, 0]}>
-          <boxGeometry args={[0.9, 0.9, 0.9]} />
+        <mesh key={i} position={[s.x, s.y + 0.45, s.z]} rotation={[i * 1.3, i * 0.7, 0]} geometry={geos[i]}>
           <meshBasicMaterial color={palette.debris} />
         </mesh>
       ))}
@@ -181,18 +200,19 @@ function RestingDebris({ spots }: { spots: { x: number; y: number; z: number }[]
   )
 }
 
-// ── Dark cubes tumbling slowly in the air above the city ─────
+// ── Dark shards tumbling slowly in the air above the city ────
 function FloatingDebris() {
   const groupRef = useRef<THREE.Group>(null)
 
-  const cubes = useMemo(() => {
+  const shards = useMemo(() => {
     const rng = createRng(1337)
     const d = BOOT.debris
-    return Array.from({ length: d.floating }, () => ({
+    return Array.from({ length: d.floating }, (_, i) => ({
       pos: [(rng() - 0.5) * 14, 8.5 + rng() * 2.5, (rng() - 0.5) * 12] as const,
       size: d.minSize + rng() * (d.maxSize - d.minSize),
       spin: [(rng() - 0.5) * 0.5, (rng() - 0.5) * 0.5, (rng() - 0.5) * 0.5] as const,
       drift: (rng() - 0.5) * 0.15,
+      geometry: makeShardGeometry(8000 + i),
     }))
   }, [])
 
@@ -200,7 +220,7 @@ function FloatingDebris() {
     const group = groupRef.current
     if (!group) return
     group.children.forEach((child, i) => {
-      const c = cubes[i]
+      const c = shards[i]
       child.rotation.x += c.spin[0] * delta
       child.rotation.y += c.spin[1] * delta
       child.rotation.z += c.spin[2] * delta
@@ -210,9 +230,8 @@ function FloatingDebris() {
 
   return (
     <group ref={groupRef}>
-      {cubes.map((c, i) => (
-        <mesh key={i} position={[...c.pos]}>
-          <boxGeometry args={[c.size, c.size, c.size]} />
+      {shards.map((c, i) => (
+        <mesh key={i} position={[...c.pos]} scale={c.size} geometry={c.geometry}>
           <meshBasicMaterial color={palette.debris} />
         </mesh>
       ))}
@@ -220,27 +239,74 @@ function FloatingDebris() {
   )
 }
 
-// ── Glowing crater at the centre of the city ─────────────────
+// ── Glowing crater + layered gas over it ─────────────────────
+// The reference centre is not a flat glow: translucent blue wisps with
+// purple fringes counter-rotate and slowly grow through the boot, with
+// the bright core flickering underneath (study frames b010–b026).
 function CraterGlow() {
   const mistTex = useMemo(() => makeMistTexture(), [])
-  const spriteRef = useRef<THREE.Sprite>(null)
+  const coreRef = useRef<THREE.Sprite>(null)
+  const wispRefs = useRef<(THREE.Sprite | null)[]>([])
+
+  const wisps = useMemo(() => {
+    const rng = createRng(606)
+    const s = BOOT.smoke
+    return Array.from({ length: s.layers }, (_, i) => ({
+      color: palette.smoke[i % palette.smoke.length],
+      scale: s.baseScale * (0.8 + rng() * 0.7),
+      rot: rng() * Math.PI * 2,
+      // Alternate spin direction per layer — the counter-rotation is what
+      // makes the gas look like it swirls
+      rotSpeed: (0.12 + rng() * 0.1) * (i % 2 === 0 ? 1 : -1),
+      offset: [(rng() - 0.5) * 1.2, 0.7 + i * 0.35, (rng() - 0.5) * 1.2] as const,
+      opacity: 0.16 + rng() * 0.1,
+      phase: rng() * Math.PI * 2,
+    }))
+  }, [])
 
   useFrame(({ clock }) => {
+    const t = bootTime(clock.elapsedTime)
     const flicker = 1 + Math.sin(clock.elapsedTime * 3.1) * 0.08 + Math.sin(clock.elapsedTime * 7.7) * 0.05
-    if (spriteRef.current) (spriteRef.current.material as THREE.SpriteMaterial).opacity = 0.5 * flicker
+    if (coreRef.current) (coreRef.current.material as THREE.SpriteMaterial).opacity = 0.5 * flicker
+
+    wisps.forEach((w, i) => {
+      const sprite = wispRefs.current[i]
+      if (!sprite) return
+      const mat = sprite.material as THREE.SpriteMaterial
+      mat.rotation = w.rot + clock.elapsedTime * w.rotSpeed
+      mat.opacity = w.opacity * (1 + Math.sin(clock.elapsedTime * 0.7 + w.phase) * 0.3)
+      // The gas grows and rises slowly through the boot
+      const grow = w.scale * (1 + t * BOOT.smoke.growthPerSec)
+      sprite.scale.set(grow, grow, 1)
+      sprite.position.set(w.offset[0], w.offset[1] + t * BOOT.smoke.riseSpeed, w.offset[2])
+    })
   })
 
   return (
-    // Soft light spilling up from the crater depths — blocks occlude its edges
-    <sprite ref={spriteRef} position={[0, 0.6, 0]} scale={[3.2, 3.2, 1]}>
-      <spriteMaterial
-        map={mistTex}
-        color={palette.glow.core}
-        blending={THREE.AdditiveBlending}
-        depthWrite={false}
-        transparent
-      />
-    </sprite>
+    <>
+      {/* Soft light spilling up from the crater depths */}
+      <sprite ref={coreRef} position={[0, 0.6, 0]} scale={[3.2, 3.2, 1]}>
+        <spriteMaterial
+          map={mistTex}
+          color={palette.glow.core}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          transparent
+        />
+      </sprite>
+      {wisps.map((w, i) => (
+        <sprite key={i} ref={(el) => { wispRefs.current[i] = el }} position={[...w.offset]}>
+          <spriteMaterial
+            map={mistTex}
+            color={w.color}
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
+            transparent
+            opacity={0}
+          />
+        </sprite>
+      ))}
+    </>
   )
 }
 
@@ -323,7 +389,9 @@ function bootTime(elapsed: number) {
   return elapsed - bootStart.t
 }
 
-// ── Camera — top-down cruise, then the plunge ────────────────
+// ── Camera — oblique birds-eye orbit cruise, then the plunge ─
+// The reference is NOT straight-down: the camera is pitched off vertical
+// so pillar side faces show, and it orbits/rolls slowly while sinking.
 function CameraRig({ onPlungeDone }: { onPlungeDone: () => void }) {
   const done = useRef(false)
 
@@ -345,11 +413,18 @@ function CameraRig({ onPlungeDone }: { onPlungeDone: () => void }) {
       }
     }
 
+    // Pitched off vertical by cam.pitch; the position orbits the city centre
+    // as the roll advances, so the look stays centred on the crater.
+    const horiz = Math.max(0, y) * Math.tan(cam.pitch)
     camera.rotation.order = 'YXZ'
-    camera.rotation.x = -Math.PI / 2
+    camera.rotation.x = cam.pitch - Math.PI / 2
     camera.rotation.y = roll
     camera.rotation.z = 0
-    camera.position.set(Math.sin(t * 0.25) * cam.cruise.driftX, y, 0)
+    camera.position.set(
+      Math.sin(roll) * horiz + Math.sin(t * 0.25) * cam.cruise.driftX,
+      y,
+      Math.cos(roll) * horiz
+    )
   })
 
   return null
@@ -392,7 +467,7 @@ function CityScene({
   return (
     <>
       <color attach="background" args={[palette.background]} />
-      <fogExp2 attach="fog" args={[palette.background, 0.016]} />
+      <fogExp2 attach="fog" args={[palette.background, 0.011]} />
 
       <BlockCity />
       <FloatingDebris />

@@ -24,6 +24,8 @@ export const PALETTES = {
     block: { tint: '#b0a89e', variance: 0.3 },
     /** The glowing crater at the centre of the city */
     glow: { core: '#ff8844', light: '#cc4400', ambient: '#1a0d04' },
+    /** Layered crater gas wisps */
+    smoke: ['#dd8855', '#aa5533'],
     debris: '#16120e',
     /** Tiny fast light streaks above the city */
     sparks: ['#aaff66', '#ff5533', '#ffaa33'],
@@ -34,9 +36,11 @@ export const PALETTES = {
   },
   classic: {
     background: '#000000',
-    /** Cooler, darker grey so the city sits in the deep blue haze of the reference */
-    block: { tint: '#969eae', variance: 0.3 },
+    /** Cool grey, tops near-white like the reference frames */
+    block: { tint: '#aab2c4', variance: 0.3 },
     glow: { core: '#88aaff', light: '#3355cc', ambient: '#0a0e1f' },
+    /** Layered crater gas wisps — reference smoke is blue with purple fringes */
+    smoke: ['#6688dd', '#7755cc'],
     debris: '#101218',
     /** Reference boot ball colours: red, blue, green, purple, pink, amber */
     sparks: ['#ff5544', '#5588ff', '#77ee77', '#bb77ff', '#ff77bb', '#ffaa44'],
@@ -57,27 +61,34 @@ export const SEED = 20260611
 // text out → plunge → blackout → star drift → menu
 // ──────────────────────────────────────────────────────────────
 export const BOOT = {
-  /** Black cover fades off the moving city over [start, end] */
-  cityReveal: { start: 0.5, end: 1.6 },
+  /** Black cover snaps off the moving city — the reference reveal is FAST
+   *  (b009 black at 1.4s → b010 fully visible at 1.5s) */
+  cityReveal: { start: 1.25, end: 1.65 },
   /** "by Dion Camilleri" overlay (the "Sony Computer Entertainment" moment).
-   *  Reference: text up ~1.5s in with a quick fade, held ~5s, out before the plunge. */
-  text: { fadeInStart: 1.5, fadeInEnd: 2.1, fadeOutStart: 6.5, fadeOutEnd: 7.1 },
+   *  Frame-exact from the 0:00-anchored clip: in ~2.2–2.6s, out ~4.3–4.65s. */
+  text: { fadeInStart: 2.2, fadeInEnd: 2.6, fadeOutStart: 4.3, fadeOutEnd: 4.65 },
   /** Slow descent phase length — the plunge starts when this ends */
-  cruiseDuration: 7.2,
-  /** Fade to black during the plunge [start, end] (absolute time) */
-  blackout: { start: 7.55, end: 8.1 },
+  cruiseDuration: 4.6,
+  /** Fade to black during the plunge [start, end] (absolute time) — late
+   *  enough that the pillars visibly rush past the camera first (b030) */
+  blackout: { start: 5.15, end: 5.65 },
   /** Star drift phase [start, end] (absolute). onComplete fires at end. */
-  stars: { start: 8.2, end: 10.5, count: 14 },
+  stars: { start: 5.75, end: 8.0, count: 14 },
 
   camera: {
     /** Narrow FOV from high above = the telephoto compression of the original */
     fov: 28,
-    /** Height above the city at t=0 */
-    startY: 30,
-    /** Cruise: slow sink + slow roll + tiny lateral drift */
-    cruise: { descentPerSec: 0.55, rollDegPerSec: 2.5, driftX: 0.12 },
-    /** Plunge: quadratic acceleration straight down with extra roll */
-    plunge: { descent: 26, rollDeg: 50 },
+    /** Height above the city at t=0 — high enough that the whole slab
+     *  floats in black space with margins, like the reference */
+    startY: 58,
+    /** Oblique birds-eye: tilt off straight-down (radians) — the reference
+     *  clearly shows pillar SIDE faces, not a pure top-down view */
+    pitch: 0.34,
+    /** Cruise: visible sink + slow roll + tiny lateral drift. The reference
+     *  camera gets ~20% closer between 1.5s and 4.2s. */
+    cruise: { descentPerSec: 2.2, rollDegPerSec: 2.5, driftX: 0.12 },
+    /** Plunge: quadratic acceleration down INTO the pillars with extra roll */
+    plunge: { descent: 55, rollDeg: 50 },
   },
 
   /** The block city. Footprint of each block is `blockSize`, grid pitch is `cell`. */
@@ -94,8 +105,12 @@ export const BOOT = {
     craterRadius: 2.1,
   },
 
-  /** Dark tumbling cubes floating above the city */
-  debris: { floating: 6, resting: 4, minSize: 0.7, maxSize: 1.5 },
+  /** Dark tumbling shards floating above the city — the reference chunks
+   *  are big irregular angular lumps, not neat cubes */
+  debris: { floating: 6, resting: 4, minSize: 0.9, maxSize: 2.2 },
+  /** Layered swirling gas over the crater: counter-rotating translucent
+   *  wisps in blue + purple that slowly grow through the boot */
+  smoke: { layers: 5, baseScale: 1.7, growthPerSec: 0.1, riseSpeed: 0.06 },
   /** The coloured light balls flying above the city (the reference comets).
    *  trail = smear sprites behind each head, trailGap = seconds between them. */
   orbs: { count: 7, trail: 4, trailGap: 0.05, minSize: 0.3, maxSize: 0.55, minSpeed: 5, maxSpeed: 10 },
