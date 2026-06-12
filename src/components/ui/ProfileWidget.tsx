@@ -12,7 +12,7 @@ import ProfileAvatar from './ProfileAvatar'
 
 export const DSCORE = 300
 
-export default function ProfileWidget({ dark }: { dark: boolean }) {
+export default function ProfileWidget({ dark, delay = 0.2 }: { dark: boolean; delay?: number }) {
   const { name, avatarId, openModal } = useProfileStore()
 
   return (
@@ -21,7 +21,7 @@ export default function ProfileWidget({ dark }: { dark: boolean }) {
       className="flex items-start gap-2.5 cursor-pointer group"
       initial={{ opacity: 0, y: -6 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2 }}
+      transition={{ delay, duration: 0.6 }}
       aria-label="Edit profile"
     >
       <div className="flex flex-col items-end gap-0.5">

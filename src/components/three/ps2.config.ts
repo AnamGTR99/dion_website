@@ -72,17 +72,18 @@ export const BOOT = {
   /** Fade to black during the plunge [start, end] (absolute time) — late
    *  enough that the pillars visibly rush past the camera first (b030) */
   blackout: { start: 7.35, end: 7.95 },
-  /** Star drift phase [start, end] (absolute). onComplete fires at end. */
-  stars: { start: 8.05, end: 10.3, count: 14 },
+  /** Black beat after the plunge before the menu mounts (seconds). The
+   *  drifting-dots phase now lives in the MENU's converge-in, so the balls
+   *  flow straight from scatter into the ring — no dead screen. */
+  blackBeat: 0.35,
 
   camera: {
     /** Narrow FOV from high above = the telephoto compression of the original */
     fov: 28,
     /** Height above the city at t=0 — whole slab in frame with a black border */
     startY: 54,
-    /** Near top-down with a slight tilt — enough for a hint of the pillar
-     *  side faces without losing the birds-eye read */
-    pitch: 0.18,
+    /** Near top-down — just a whisper of tilt so edges read as 3D */
+    pitch: 0.08,
     /** Cruise: gentle sink + slow roll + tiny lateral drift */
     cruise: { descentPerSec: 1.5, rollDegPerSec: 2.5, driftX: 0.12 },
     /** Plunge: quadratic acceleration down INTO the pillars with extra roll */
@@ -108,7 +109,7 @@ export const BOOT = {
   debris: { floating: 6, resting: 4, minSize: 0.9, maxSize: 2.2 },
   /** Layered swirling gas over the crater: counter-rotating translucent
    *  wisps in blue + purple that slowly grow through the boot */
-  smoke: { layers: 7, baseScale: 2.1, growthPerSec: 0.12, riseSpeed: 0.07 },
+  smoke: { layers: 7, baseScale: 2.6, growthPerSec: 0.14, riseSpeed: 0.07 },
   /** The coloured light balls flying above the city (the reference comets).
    *  trail = smear sprites behind each head, trailGap = seconds between them. */
   orbs: { count: 7, trail: 4, trailGap: 0.05, minSize: 0.3, maxSize: 0.55, minSpeed: 5, maxSpeed: 10 },
@@ -155,9 +156,10 @@ export const MENU_SCENE = {
   /** Motion-smear trail sprites per orb */
   trail: { perOrb: 6, frameGap: 3, baseOpacity: 0.0, speedOpacity: 3.2 },
 
-  /** Orbs fly in from scattered space when the menu mounts (continues the
-   *  boot stars — coloured, fading to white-blue as the ring forms) */
-  convergeDuration: 1.6,
+  /** Orbs fly in from scattered space when the menu mounts — this IS the
+   *  drifting-dots beat after the plunge (coloured, fading to white-blue
+   *  as the ring forms), so it runs long enough to read as its own moment */
+  convergeDuration: 2.4,
 
   /** Cluster placement per screen, like the reference: left of the menu text.
    *  xFrac/yFrac are fractions of the visible viewport width/height.

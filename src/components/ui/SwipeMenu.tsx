@@ -7,7 +7,7 @@
  * (rendered by PS2Chrome). Up/Down arrows + Enter, tap, or click.
  */
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { motion } from 'framer-motion'
 import { useNavigationStore } from '@/lib/store'
@@ -25,8 +25,21 @@ const MENU_ITEMS = [
   { id: 'showreel', label: 'Showreel', screen: 'SHOWREEL' as const },
 ]
 
+// The long converge-then-reveal choreography only plays on the first menu
+// visit (straight after boot); Back-navigation returns snap in quickly.
+function useMenuIntro() {
+  const [intro] = useState(
+    () => typeof window !== 'undefined' && !sessionStorage.getItem('menuIntroPlayed')
+  )
+  useEffect(() => {
+    sessionStorage.setItem('menuIntroPlayed', '1')
+  }, [])
+  return intro
+}
+
 export default function SwipeMenu() {
   const { activeMenuIndex, setActiveMenuIndex, setScreen } = useNavigationStore()
+  const intro = useMenuIntro()
 
   // Window-level keys so the clickable ✕ Enter prompt (which dispatches a
   // synthetic keydown) and real keyboards behave identically.
@@ -61,7 +74,7 @@ export default function SwipeMenu() {
       transition={{ duration: 0.5 }}
     >
       {/* PS2 orb-swarm 3D scene — swirling cluster left of the menu */}
-      <MenuScene variant="menu" />
+      <MenuScene variant="menu" intro={intro} />
 
       {/* Menu items — right of the cluster, like Browser / System Configuration */}
       <div
@@ -77,7 +90,7 @@ export default function SwipeMenu() {
             style={{ textShadow: '1px 2px 4px black' }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
+            transition={{ delay: intro ? 2.0 : 0.4, duration: 0.8 }}
           >
             Select a section
           </motion.p>
@@ -100,7 +113,9 @@ export default function SwipeMenu() {
                   }}
                   initial={{ opacity: 0, x: 24 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 + index * 0.12, duration: 0.5 }}
+                  // Text flows in only once the ring has mostly formed,
+                  // like the reference ("Browser" appears after the dots)
+                  transition={{ delay: (intro ? 1.7 : 0.2) + index * 0.18, duration: 0.7 }}
                   whileHover={isActive ? { scale: 1.02 } : { scale: 1.01 }}
                 >
                   <motion.span

@@ -18,7 +18,6 @@ import { useRef, useMemo, useState, useEffect } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
-import { motion, AnimatePresence } from 'framer-motion'
 import { BOOT, palette, createRng, smoothstep } from './ps2.config'
 import { makeNoiseTexture, makeGlowTexture, makeMistTexture } from './textures'
 
@@ -259,7 +258,7 @@ function CraterGlow() {
       // makes the gas look like it swirls
       rotSpeed: (0.12 + rng() * 0.1) * (i % 2 === 0 ? 1 : -1),
       offset: [(rng() - 0.5) * 1.2, 0.7 + i * 0.35, (rng() - 0.5) * 1.2] as const,
-      opacity: 0.22 + rng() * 0.12,
+      opacity: 0.32 + rng() * 0.15,
       phase: rng() * Math.PI * 2,
     }))
   }, [])
@@ -494,74 +493,28 @@ function CityScene({
   )
 }
 
-// ── Drifting star dots on black (the beat before the menu) ───
-function StarDrift() {
-  const stars = useMemo(() => {
-    const rng = createRng(2024)
-    return Array.from({ length: BOOT.stars.count }, () => ({
-      left: 15 + rng() * 70,
-      top: 12 + rng() * 70,
-      color: palette.stars[Math.floor(rng() * palette.stars.length)],
-      size: 1.5 + rng() * 2.5,
-      dx: (rng() - 0.5) * 30,
-      dy: (rng() - 0.5) * 24,
-      delay: rng() * 0.8,
-      dur: 2.6 + rng() * 1.4,
-    }))
-  }, [])
-
-  return (
-    <motion.div
-      className="absolute inset-0 bg-black overflow-hidden"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      {stars.map((s, i) => (
-        <motion.div
-          key={i}
-          className="absolute rounded-full"
-          style={{
-            left: `${s.left}%`,
-            top: `${s.top}%`,
-            width: s.size,
-            height: s.size,
-            backgroundColor: s.color,
-            boxShadow: `0 0 ${s.size * 3}px ${s.color}`,
-          }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0, 0.9, 0.4, 0.9], x: s.dx, y: s.dy }}
-          transition={{ duration: s.dur, delay: s.delay, ease: 'linear' }}
-        />
-      ))}
-    </motion.div>
-  )
-}
-
 // ── Main component — owns the boot timeline ──────────────────
+// After the plunge there is only a short black beat, then the menu mounts
+// and its own converge-in carries the drifting balls into the ring — the
+// hand-off is continuous, like the reference.
 interface BootSceneProps {
   onAnimationComplete: () => void
 }
 
 export default function BootScene({ onAnimationComplete }: BootSceneProps) {
-  const [phase, setPhase] = useState<'city' | 'stars'>('city')
+  const [plunged, setPlunged] = useState(false)
   const coverRef = useRef<HTMLDivElement>(null)
   const textRef = useRef<HTMLDivElement>(null)
 
-  // Stars phase ends the boot
   useEffect(() => {
-    if (phase !== 'stars') return
-    const timer = setTimeout(
-      () => onAnimationComplete(),
-      (BOOT.stars.end - BOOT.stars.start) * 1000
-    )
+    if (!plunged) return
+    const timer = setTimeout(() => onAnimationComplete(), BOOT.blackBeat * 1000)
     return () => clearTimeout(timer)
-  }, [phase, onAnimationComplete])
+  }, [plunged, onAnimationComplete])
 
   return (
     <div className="fixed inset-0 z-40 bg-black">
-      {phase === 'city' && (
+      {!plunged && (
         <>
           <Canvas
             camera={{ fov: BOOT.camera.fov, near: 0.1, far: 80, position: [0, BOOT.camera.startY, 0] }}
@@ -569,7 +522,7 @@ export default function BootScene({ onAnimationComplete }: BootSceneProps) {
             gl={{ antialias: true, alpha: false }}
           >
             <CityScene
-              onPlungeDone={() => setPhase('stars')}
+              onPlungeDone={() => setPlunged(true)}
               coverRef={coverRef}
               textRef={textRef}
             />
@@ -613,8 +566,6 @@ export default function BootScene({ onAnimationComplete }: BootSceneProps) {
           </div>
         </>
       )}
-
-      <AnimatePresence>{phase === 'stars' && <StarDrift key="stars" />}</AnimatePresence>
     </div>
   )
 }

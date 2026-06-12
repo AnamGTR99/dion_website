@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
 import { useNavigationStore, type Screen } from '@/lib/store'
 import ProfileWidget from './ProfileWidget'
 
@@ -111,13 +112,19 @@ export default function PS2Chrome() {
   const prompts = getPrompts(currentScreen)
   const dark = LIGHT_SCREENS.includes(currentScreen)
   const showProfile = PROFILE_SCREENS.includes(currentScreen)
+  // Long reveal only on the first menu after boot (SwipeMenu sets the flag
+  // in an effect, i.e. after this render — so the first read is still unset)
+  const menuIntro =
+    currentScreen === 'MENU' &&
+    typeof window !== 'undefined' &&
+    !sessionStorage.getItem('menuIntroPlayed')
 
   return (
     <>
       {/* Top right: visitor profile on portfolio screens, brand mark + clock elsewhere */}
       <div className="fixed top-5 right-6 z-50 flex flex-col items-end gap-0.5">
         {showProfile ? (
-          <ProfileWidget dark={dark} />
+          <ProfileWidget dark={dark} delay={menuIntro ? 2.3 : 0.2} />
         ) : (
           <>
             <div
@@ -136,12 +143,20 @@ export default function PS2Chrome() {
         )}
       </div>
 
-      {/* PS2 button prompts — bottom centre, clickable */}
+      {/* PS2 button prompts — bottom centre, clickable. They ease in with
+          the rest of the screen (a long beat on the menu, where the ring
+          forms first, like the reference). */}
       {(prompts.enter || prompts.back) && (
-        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-10">
+        <motion.div
+          key={currentScreen}
+          className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-10"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: menuIntro ? 2.3 : 0.5, duration: 0.7 }}
+        >
           {prompts.enter && <PSButton type="cross" label="Enter" onClick={() => pressKey('Enter')} />}
           {prompts.back && <PSButton type="circle" label="Back" onClick={() => pressKey('Escape')} />}
-        </div>
+        </motion.div>
       )}
     </>
   )

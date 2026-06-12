@@ -55,7 +55,7 @@ function sceneTime(elapsed: number) {
   return elapsed - sceneStart.t
 }
 
-function OrbSwarm() {
+function OrbSwarm({ intro }: { intro: boolean }) {
   const glowTex = useMemo(() => makeGlowTexture(), [])
   const coreRefs = useRef<(THREE.Sprite | null)[]>([])
   const haloRefs = useRef<(THREE.Sprite | null)[]>([])
@@ -71,8 +71,9 @@ function OrbSwarm() {
       // like the reference
       baseAngle: (i / (CFG.orbCount - 1)) * Math.PI * 2 * CFG.arcSpan,
       phase: rng() * Math.PI * 2,
-      // Where each orb flies in from on mount, tinted like the boot stars
-      scatter: new THREE.Vector3((rng() - 0.5) * 9, (rng() - 0.5) * 7, (rng() - 0.5) * 4),
+      // Where each orb flies in from on mount, tinted like the boot stars —
+      // spread wide so the drift-then-form reads clearly
+      scatter: new THREE.Vector3((rng() - 0.5) * 14, (rng() - 0.5) * 9, (rng() - 0.5) * 4),
       scatterColor: new THREE.Color(palette.stars[i % palette.stars.length]),
       history: Array.from({ length: CFG.trail.perOrb * CFG.trail.frameGap + 1 }, () => new THREE.Vector3()),
     }))
@@ -91,7 +92,9 @@ function OrbSwarm() {
       smoothstep(cyc.collapse.rampIn[0], cyc.collapse.rampIn[1], u) *
       (1 - smoothstep(cyc.collapse.rampOut[0], cyc.collapse.rampOut[1], u))
 
-    const converge = smoothstep(0, CFG.convergeDuration, t)
+    // The drift-in only plays on the first menu after boot — Back-navigation
+    // shows the formed ring immediately
+    const converge = intro ? smoothstep(0, CFG.convergeDuration, t) : 1
     const spin = CFG.rotateSpeed * t
 
     // The comet head rides the ring path at FULL radius (reference f025–f027)
@@ -284,7 +287,13 @@ function ParallaxCamera() {
   return null
 }
 
-export default function MenuScene({ variant = 'menu' }: { variant?: MenuSceneVariant }) {
+export default function MenuScene({
+  variant = 'menu',
+  intro = false,
+}: {
+  variant?: MenuSceneVariant
+  intro?: boolean
+}) {
   return (
     <div className="absolute inset-0">
       <Canvas
@@ -294,7 +303,7 @@ export default function MenuScene({ variant = 'menu' }: { variant?: MenuSceneVar
       >
         <color attach="background" args={[palette.background]} />
         <ClusterRig variant={variant}>
-          <OrbSwarm />
+          <OrbSwarm intro={intro} />
           <Mist />
         </ClusterRig>
         <ParallaxCamera />
